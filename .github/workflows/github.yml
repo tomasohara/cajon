@@ -1,0 +1,68 @@
+# This workflow will install Python dependencies, run tests and lint with a single
+# version of Python.
+#
+# For more information see:
+#    https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+#
+
+name: Python application
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.10"
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 pytest
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    ## OLD:
+    ## - name: Lint with flake8
+    ##   ## TODO2: make optional
+    ##   run: |
+    ##     # stop the build if there are Python syntax errors or undefined names
+    ##     flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude public
+    ##     # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+    ##     flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude public
+
+    - name: Run query
+      run: |
+        ## BAD: DO_WEB=0 DO_JOBS=0 source startup.txt
+        ## TODO (fix bing w/ VSD): USE_BING=1 BING_KEY="1460069f62444bafa1f624a874f166a0" python visual_diff_server.py --query fubar
+        ## DEBUG: USE_BING=1 BING_KEY="1460069f62444bafa1f624a874f166a0" python search_client.py fubar
+        echo "TODO: run query and verify reasonable results"
+    
+    - name: Test with pytest
+      run: |
+        ## OLD: pytest
+        PYTHONPATH="$PWD:$PWD/tests:$PYTHONPATH" pytest
+
+
+    - name: Show status (e.g., for posthoc review)
+      # Note: a few status commands are run to see the context of the invocation (e.g., where run)
+      # TODO: Show some temporary output files, etc. used during test.
+      run: |
+        log="_github-actions-$$.list"
+        # run-cmd(cmd): runs CMD twice: once to stdout and once to $log
+        function run-cmd { echo "issuing: $*" >> "$log" 2>&1; "$@" 2>&1 | tee --append "$log"; }
+        run-cmd pwd
+        run-cmd uname -a

@@ -1,0 +1,48 @@
+# Workflow for running locally (e.g., via https://github.com/nektos/act)
+#
+# Note:
+# - Created with ChatGPT along with being based on version from mezcla and
+#   shell-scripts repos.
+#
+
+name: Act-Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        ## TODO: os: [ubuntu-20.04, ubuntu-latest]
+        os: [ubuntu-20.04]
+        ## TODO: python-version: ["3.8", "3.9", "3.10"]
+        python-version: ["3.9"]
+
+    steps:
+    - name: Check out repository code
+      uses: actions/checkout@v3
+
+    - name: Build Docker image
+      run: docker build --tag python-app:latest .
+
+    - name: Run tests in Docker container
+      # note: command format: docker run [OPTIONS] IMAGE [COMMAND] [ARG...];
+      # The environment file normally has no entries (i.e., just comments).
+      ## TODO: run: docker run --rm python-app:latest
+      run: docker run --env-file _temp-user-docker.env python-app:latest
+
+    - name: Show status (e.g., for posthoc review)
+      # Note: A few status commands are run to see the context of the invocation (e.g., where run).
+      # TODO: Show some temporary output files, etc. used during test.
+      run: |
+        log="_github-actions-$$.list"
+        # run-cmd(cmd): runs CMD twice: once to stdout and once to $log
+        function run-cmd { echo "issuing: $*" >> "$log" 2>&1; "$@" 2>&1 | tee --append "$log"; }
+        run-cmd pwd
+        run-cmd uname -a
